@@ -1,0 +1,37 @@
+{
+    "speech_recognition": {
+        "engine": "remote_api",
+        "language": "auto",
+        "vad_sensitivity": 3,
+        "silence_timeout": 2.0,
+        "remote_api_url": "http://127.0.0.1:8765",
+        "remote_api_key": "",
+        "remote_api_endpoint": "/inference"
+    },
+    "audio": {
+        "device_index": null,
+        "device_name": "pipewire"
+    },
+    "sound_effects": {
+        "enabled": true
+    },
+    "shortcuts": {
+        "toggle_recognition": "ctrl+ctrl",
+        "mode": "push_to_talk"
+    },
+    "ui": {
+        "start_minimized": false,
+        "show_notifications": true
+    },
+    "general": {
+        "autostart": false,
+        "first_run": false
+    },
+    "text_injection": {
+        "copy_to_clipboard": false
+    },
+    "advanced": {
+        "debug_logging": false,
+        "wayland_mode": false
+    }
+}
