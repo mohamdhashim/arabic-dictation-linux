@@ -22,7 +22,6 @@ Mic → PipeWire → vocalinux (push-to-talk)
 ## Requirements
 
 - NVIDIA GPU with 3+ GB VRAM
-- [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed
 - Docker + Docker Compose
 - PipeWire audio (default on Fedora 34+, Ubuntu 22.10+)
 - A HuggingFace account with access to the model (free, requires license acceptance)

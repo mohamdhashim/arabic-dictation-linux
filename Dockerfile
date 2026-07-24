@@ -5,15 +5,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
-    python3.11-pip \
+    python3-pip \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt \
-    --extra-index-url https://download.pytorch.org/whl/cu121
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt \
+    --extra-index-url https://download.pytorch.org/whl/cu128
 
 COPY server.py .
 

@@ -19,7 +19,26 @@ else
 fi
 info "Detected distro: $DISTRO"
 
-# ── 1. Install ydotool ───────────────────────────────────────────────────────
+# ── 1. nvidia-container-toolkit ─────────────────────────────────────────────
+info "Installing nvidia-container-toolkit..."
+if [ "$DISTRO" = "fedora" ]; then
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo \
+        | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo > /dev/null
+    sudo dnf install -y nvidia-container-toolkit
+else
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+        | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+        | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+        | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+    sudo apt-get update -q
+    sudo apt-get install -y nvidia-container-toolkit
+fi
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+info "nvidia-container-toolkit configured."
+
+# ── 3. Install ydotool ───────────────────────────────────────────────────────
 info "Installing ydotool..."
 if [ "$DISTRO" = "fedora" ]; then
     sudo dnf install -y ydotool
@@ -38,7 +57,7 @@ else
     }
 fi
 
-# ── 2. /dev/uinput permissions ───────────────────────────────────────────────
+# ── 4. /dev/uinput permissions ───────────────────────────────────────────────
 info "Setting up /dev/uinput permissions..."
 echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' \
     | sudo tee /etc/udev/rules.d/60-uinput.rules > /dev/null
@@ -51,7 +70,7 @@ if ! groups | grep -q "\binput\b"; then
     NEED_RELOGIN=1
 fi
 
-# ── 3. ydotoold systemd user service ────────────────────────────────────────
+# ── 5. ydotoold systemd user service ────────────────────────────────────────
 info "Setting up ydotoold systemd user service..."
 mkdir -p ~/.config/systemd/user
 cat > ~/.config/systemd/user/ydotoold.service <<'EOF'
@@ -70,12 +89,14 @@ systemctl --user daemon-reload
 systemctl --user enable --now ydotoold
 info "ydotoold running: $(systemctl --user is-active ydotoold)"
 
-# ── 4. Install vocalinux ─────────────────────────────────────────────────────
+# ── 6. Install vocalinux ─────────────────────────────────────────────────────
 info "Installing vocalinux..."
 if [ "$DISTRO" = "fedora" ]; then
-    sudo dnf install -y python3-pip portaudio-devel python3-devel
+    sudo dnf install -y python3-pip python3-devel portaudio-devel \
+        cairo-devel gobject-introspection-devel cairo-gobject-devel
 else
-    sudo apt-get install -y python3-pip portaudio19-dev python3-dev
+    sudo apt-get install -y python3-pip python3-dev portaudio19-dev \
+        libcairo2-dev libgirepository1.0-dev
 fi
 
 VOCALINUX_VENV="$HOME/.local/share/vocalinux/venv"
@@ -83,12 +104,12 @@ python3 -m venv "$VOCALINUX_VENV"
 "$VOCALINUX_VENV/bin/pip" install --quiet --upgrade pip
 "$VOCALINUX_VENV/bin/pip" install --quiet vocalinux pyaudio
 
-# ── 5. vocalinux config ──────────────────────────────────────────────────────
+# ── 7. vocalinux config ──────────────────────────────────────────────────────
 info "Installing vocalinux config..."
 mkdir -p ~/.config/vocalinux
 cp "$(dirname "$0")/config/vocalinux.json" ~/.config/vocalinux/config.json
 
-# ── 6. Set default PipeWire mic ──────────────────────────────────────────────
+# ── 8. Set default PipeWire mic ──────────────────────────────────────────────
 info "Detecting microphone..."
 USB_MIC=$(pactl list sources short 2>/dev/null \
     | grep -i "alsa_input.usb" \
@@ -113,7 +134,7 @@ else
     warn "  (list sources: pactl list sources short)"
 fi
 
-# ── 7. Desktop entry ─────────────────────────────────────────────────────────
+# ── 9. Desktop entry ─────────────────────────────────────────────────────────
 info "Creating vocalinux desktop entry..."
 mkdir -p ~/.local/share/applications
 cat > ~/.local/share/applications/vocalinux.desktop <<EOF
